@@ -101,7 +101,29 @@ namespace NumGen
         static public void primeGen(int bits, int count)
         {
             if (count == 0) return;
-            BigInteger num = generator(bits);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int ccount = 1;
+            Parallel.For(0, count, i =>
+            {
+                BigInteger num = generator(bits);
+                int fCount = factorCount(num);
+                while (fCount != 2)
+                {
+                    num = generator(bits);
+                    fCount = factorCount(num);
+                }
+                lock (ConsoleLock)
+                {
+                    Console.WriteLine(Environment.NewLine + ccount + ": " + num);
+                    ccount++;
+                }
+            }
+            );
+            sw.Stop();
+            TimeSpan t = sw.Elapsed;
+            Console.WriteLine("Time to Generate: " + t);
+            return;
 
         }
         static private int factorCount(BigInteger num)
