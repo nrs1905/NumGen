@@ -34,6 +34,7 @@ namespace NumGen
             catch { 
                 Console.WriteLine("bits must be an integer, " + args[0] + " is not an int" + Environment.NewLine);
                 Console.WriteLine(help);
+                return;
             }
             if (args.Length == 3) {
                 try
@@ -44,16 +45,18 @@ namespace NumGen
                 {
                     Console.WriteLine("count must be an integer, " + args[2] + " is not an int" + Environment.NewLine);
                     Console.WriteLine(help);
+                    return;
                 }
             }
             option = args[1];
-            if (bits % 8 != 0 | bits !> 31)
+            if (bits % 8 != 0 | bits < 32)
             {
                 Console.WriteLine(bits + " is not a valid input for bits." + Environment.NewLine);
                 Console.WriteLine(help);
+                return;
             }
             if (count < 0) count = 0;
-            if (option != "odd" | option != "prime")
+            if (option != "odd" & option != "prime")
             {
                 Console.WriteLine(option + " is not a valid input for option." + Environment.NewLine);
                 Console.WriteLine(help);
@@ -64,11 +67,11 @@ namespace NumGen
         }
         static private BigInteger generator(int bits)
         {
-            byte[] bytes = RandomNumberGenerator.GetBytes(bits % 8);
+            Byte[] bytes = RandomNumberGenerator.GetBytes(bits / 8);
             BigInteger num = new BigInteger(bytes);
             while (num % 2 == 0)
             {
-                num = new BigInteger(RandomNumberGenerator.GetBytes(bits % 8));
+                num = new BigInteger(RandomNumberGenerator.GetBytes(bits / 8));
             }
             return num;
         }
@@ -77,20 +80,18 @@ namespace NumGen
             if (count == 0) return;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            int ccount = 0;
-            Parallel.For(0, count, i =>
+            int ccount = 1;
+            while (ccount <= count)
             {
                 BigInteger num = generator(bits);
                 int fCount = factorCount(num);
-                lock (ConsoleLock) {
-                    Console.WriteLine(Environment.NewLine + ccount + ": " + num + Environment.NewLine);
-                    Console.WriteLine("Number of factors: " + fCount + Environment.NewLine);
-                }
+                Console.WriteLine(Environment.NewLine + ccount + ": " + num + Environment.NewLine);
+                Console.WriteLine("Number of factors: " + fCount + Environment.NewLine);
+                ccount++;
             }
-            );
             sw.Stop();
             TimeSpan t = sw.Elapsed;
-
+            return;
         }
         static public void primeGen(int bits, int count)
         {
@@ -100,8 +101,7 @@ namespace NumGen
         }
         static private int factorCount(BigInteger num)
         {
-            double dnum = Convert.ToDouble(num);
-            int square = (int)Math.Sqrt(dnum);
+            int square = (int)Math.Sqrt((double)num);
             int count = 2;
             Parallel.For(2, square, i =>
                 {
