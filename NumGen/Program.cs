@@ -4,6 +4,8 @@ using System.Numerics;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Security.Principal;
+using System.Runtime.CompilerServices;
+using System.Diagnostics.Metrics;
 //Author: Nathaniel Shah
 namespace NumGen
 {
@@ -65,7 +67,7 @@ namespace NumGen
             if (option == "odd") oddGen(bits, count);
             else primeGen(bits, count);
         }
-        static private BigInteger generator(int bits)
+        static public BigInteger generator(int bits)
         {
             Byte[] bytes = RandomNumberGenerator.GetBytes(bits / 8);
             BigInteger num = new BigInteger(bytes);
@@ -107,11 +109,11 @@ namespace NumGen
             Parallel.For(0, count, i =>
             {
                 BigInteger num = generator(bits);
-                int fCount = factorCount(num);
-                while (fCount != 2)
+                Boolean prime = num.IsProbablyPrime();
+                while (!prime)
                 {
                     num = generator(bits);
-                    fCount = factorCount(num);
+                    prime = num.IsProbablyPrime();
                 }
                 lock (ConsoleLock)
                 {
@@ -128,17 +130,56 @@ namespace NumGen
         }
         static private int factorCount(BigInteger num)
         {
-            int square = (int)Math.Sqrt((double)num);
             int count = 2;
-            Parallel.For(2, square, i =>
+            for(int i = 3; i < num /2; i += 2)
+            {
+                if (num%i == 0)
                 {
-                    if (num % i == 0)
-                    {
-                        Interlocked.Increment(ref count);
-                    }
+                    count++;
                 }
-            );
+            }
             return count;
+        }
+    }
+    public static class MyExtension
+    {
+        public static Boolean IsProbablyPrime(this BigInteger value, int k = 10)
+        {
+            BigInteger r;
+            BigInteger d;
+            (r, d) = nbull(value);
+            for (int i = 0; i < k; i++)
+            {
+                BigInteger a = aCalc(value);
+                BigInteger x = BigInteger.ModPow(a, d, value);
+                if (x == BigInteger.One | x == value - 1) continue;
+                for (int j = 0; j < r - 1; j++)
+                {
+                    x = BigInteger.ModPow(x, 2, value);
+                    if (x == value - 1) continue;
+                }
+                return false;
+            }
+            return true;
+        }
+        static private BigInteger aCalc(BigInteger value)
+        {
+            BigInteger a;
+            a = NumberGen.generator(value.GetByteCount() - 1);
+            return a;
+        }
+        static private (BigInteger, BigInteger) nbull(BigInteger value)
+        {
+            value--;
+            BigInteger num = value;
+            BigInteger counter = 0;
+            while (num % 1 != 0)
+            {
+                counter++;
+                value = num;
+                num = num / 2;
+            }
+            return (counter, value);
         }
     }
 }
