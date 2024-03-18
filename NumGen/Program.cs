@@ -69,7 +69,7 @@ namespace NumGen
         {
             Byte[] bytes = RandomNumberGenerator.GetBytes(bits / 8);
             BigInteger num = new BigInteger(bytes);
-            while (num % 2 == 0)
+            while (num % 2 == 0 | num < 0)
             {
                 num = new BigInteger(RandomNumberGenerator.GetBytes(bits / 8));
             }
