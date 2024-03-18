@@ -61,7 +61,7 @@ namespace NumGen
                 Console.WriteLine(option + " is not a valid input for option." + Environment.NewLine);
                 Console.WriteLine(help);
             }
-            Console.WriteLine("BitLength: " + bits + " bits" + Environment.NewLine);
+            Console.Write("BitLength: " + bits + " bits");
             if (option == "odd") oddGen(bits, count);
             else primeGen(bits, count);
         }
@@ -81,16 +81,21 @@ namespace NumGen
             Stopwatch sw = new Stopwatch();
             sw.Start();
             int ccount = 1;
-            while (ccount <= count)
+            Parallel.For(0, count, i =>
             {
                 BigInteger num = generator(bits);
                 int fCount = factorCount(num);
-                Console.WriteLine(Environment.NewLine + ccount + ": " + num + Environment.NewLine);
-                Console.WriteLine("Number of factors: " + fCount + Environment.NewLine);
-                ccount++;
+                lock (ConsoleLock)
+                {
+                    Console.WriteLine(Environment.NewLine + ccount + ": " + num);
+                    Console.WriteLine("Number of factors: " + fCount);
+                    ccount++;
+                }
             }
+            );
             sw.Stop();
             TimeSpan t = sw.Elapsed;
+            Console.WriteLine("Time to Generate: " + t);
             return;
         }
         static public void primeGen(int bits, int count)
